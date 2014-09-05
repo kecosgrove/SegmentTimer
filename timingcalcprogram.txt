@@ -12,6 +12,7 @@
 ;Booting with default settings
 (define default-fps 60)
 (define default-out-format "frames")
+(define alt-out-format "seconds")
 (define boot-settings (make-settings default-fps default-out-format))
 
 ;Changing Settings
@@ -28,8 +29,8 @@
   (lambda (start stop)
     (let ((frames (frame-counter start stop (settings-fps boot-settings))))
       (cond
-        ((not (equal? default-out-format (settings-out-format boot-settings)))
-         (* frames (settings-fps boot-settings)))
+        ((equal? alt-out-format (settings-out-format boot-settings))
+         (exact->inexact(/ frames (settings-fps boot-settings))))
         (#t
          frames)))))
 
