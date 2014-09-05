@@ -1,27 +1,48 @@
 ;Calculating frames from timestamps assuming 60 FPS
+;
+;Settings:
+;SET-FPS: takes a number and sets it as the working FPS (default is 60)
+;SET-OUT-FORMAT: takes either the string "seconds" or the string "frames" (default is "frames")
+;
 ;Functions:
-;frames - Input 2 lists of 2 numbers
-;loadless - Input a list of 2 number element lists
+;FROM-TO: takes any two times in seconds, returns the duration between them.
 
-(define frames
+(define-struct settings (fps out-format))
+
+;Booting with default settings
+(define default-fps 60)
+(define default-out-format "frames")
+(define boot-settings (make-settings default-fps default-out-format))
+
+;Changing Settings
+(define set-fps
+  (lambda (fps)
+    (set-settings-fps! boot-settings fps)))
+
+(define set-out-format
+  (lambda (out-format)
+    (set-settings-out-format! boot-settings out-format)))
+
+;Timing functions
+(define from-to
   (lambda (start stop)
-    (+ (* (- (first stop) (first start)) 60)
-       (- (second stop) (second start))
-       1)))
+    (let ((frames (frame-counter start stop (settings-fps boot-settings))))
+      (cond
+        ((not (equal? default-out-format (settings-out-format boot-settings)))
+         (* frames (settings-fps boot-settings)))
+        (#t
+         frames)))))
 
-(define loadless
-  (lambda (listy)
-    (list (frame-sum listy)
-          (frames (first listy)
-                  (last listy)))))
+(define frame-counter
+  (lambda (start stop fps)
+    (letrec ((sec-start (floor start))
+             (frac-start (- start sec-start))
+             (sec-stop (floor stop))
+             (frac-stop (- stop sec-stop)))
+      (+ (- (+ (* sec-stop fps) (frac-to-frame frac-stop fps))
+            (+ (* sec-start fps) (frac-to-frame frac-start fps)))
+         1))))
 
-(define frame-sum
-  (lambda (listy)
-    (cond
-      ((null? (rest (rest listy)))
-       (frames (first listy)
-               (second listy)))
-      (#t
-       (+ (frames (first listy)
-                  (second listy))
-          (frame-sum (rest (rest listy))))))))
+(define frac-to-frame
+  (lambda (frac fps)
+    (round (* frac fps))))
