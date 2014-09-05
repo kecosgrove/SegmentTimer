@@ -1,4 +1,4 @@
-;Calculating frames from timestamps assuming 60 FPS
+;Calculating frames from timestamps
 ;
 ;Settings:
 ;SET-FPS: takes a number and sets it as the working FPS (default is 60)
@@ -6,6 +6,7 @@
 ;
 ;Functions:
 ;FROM-TO: takes any two times in seconds, returns the duration between them.
+;LOADLESS: takes a list of times in seconds of even length. Every other interval is added and returned. RTA time is printed.
 
 (define-struct settings (fps out-format))
 
@@ -15,7 +16,7 @@
 (define alt-out-format "seconds")
 (define boot-settings (make-settings default-fps default-out-format))
 
-;Changing Settings
+;Settings
 (define set-fps
   (lambda (fps)
     (set-settings-fps! boot-settings fps)))
@@ -27,12 +28,29 @@
 ;Timing functions
 (define from-to
   (lambda (start stop)
-    (let ((frames (frame-counter start stop (settings-fps boot-settings))))
-      (cond
-        ((equal? alt-out-format (settings-out-format boot-settings))
-         (exact->inexact(/ frames (settings-fps boot-settings))))
-        (#t
-         frames)))))
+    (format-converter (frame-counter start stop (settings-fps boot-settings)))))
+
+(define format-converter
+  (lambda (frames)
+    (cond
+      ((equal? alt-out-format (settings-out-format boot-settings))
+       (exact->inexact(/ frames (settings-fps boot-settings))))
+      (#t
+       (inexact->exact frames)))))
+
+(define loadless
+  (lambda (listy)
+    (printf "~A~%" (from-to (first listy) (last listy)))
+    (format-converter (loadless-helper listy))))
+
+(define loadless-helper
+  (lambda (listy)
+    (cond
+      ((= (length listy) 2)
+       (frame-counter (first listy) (second listy) (settings-fps boot-settings)))
+      (#t
+       (+ (frame-counter (first listy) (second listy) (settings-fps boot-settings))
+          (loadless-helper (rest (rest listy))))))))
 
 (define frame-counter
   (lambda (start stop fps)
