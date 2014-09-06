@@ -1,4 +1,6 @@
-;Calculating frames from timestamps
+;A tool for timing video content. Times the two input frames and all frames in between.
+;Calculates exact frames from approximate timestamps. Rounds times to exact frame values.
+;Includes various other functionalities to time durations and remove loading or other unwanted time.
 ;
 ;Settings:
 ;SET-FPS: takes a number and sets it as the working FPS (default is 60)
