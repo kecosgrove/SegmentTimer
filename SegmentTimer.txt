@@ -1,0 +1,99 @@
+;Calculating frames from timestamps
+;
+;Settings:
+;SET-FPS: takes a number and sets it as the working FPS (default is 60)
+;SET-OUT-FORMAT: takes either the string "seconds" or the string "frames" (default is "frames")
+;
+;Functions:
+;FROM-TO: takes any two times in seconds, returns the duration between them.
+;LOADLESS: takes a list of times in seconds of even length. Every other interval is added and returned. RTA time is printed.
+;LONGFORM-FROM-TO: takes 2 lists of length 1 2 or 3 where the last element is seconds, the second to last is minutes and
+;                  the third to last is hours. Calculates the difference between them.
+;LONGFORM-LOADLESS: takes a list of lists like those described above.
+;
+;Example Inputs to Interpreter:
+;(from-to 12.53 87.3)
+;4487
+;(loadless '(2.33 47.8 49.85 121.3 122.15 154.016))
+;9102
+;8930
+;---------------------------------------------------------------------------------------------------------------------------
+
+(define-struct settings (fps out-format))
+
+;Booting with default settings
+(define default-fps 60)
+(define default-out-format "frames")
+(define alt-out-format "seconds")
+(define boot-settings (make-settings default-fps default-out-format))
+
+;Settings
+(define set-fps
+  (lambda (fps)
+    (set-settings-fps! boot-settings fps)))
+
+(define set-out-format
+  (lambda (out-format)
+    (set-settings-out-format! boot-settings out-format)))
+
+;Timing functions
+(define from-to
+  (lambda (start stop)
+    (format-converter (frame-counter start stop (settings-fps boot-settings)))))
+
+(define loadless
+  (lambda (listy)
+    (printf "With Loads: ~A~%Loadless: " (from-to (first listy) (last listy)))
+    (format-converter (loadless-helper listy))))
+
+(define longform-from-to
+  (lambda (start stop)
+    (from-to (longform-to-secs start) (longform-to-secs stop))))
+
+(define longform-loadless
+  (lambda (listy)
+    (loadless (map longform-to-secs listy))))
+
+(define longform-to-secs
+  (lambda (listy)
+    (cond
+      ((= (length listy) 1)
+       (first listy))
+      ((= (length listy) 2)
+       (+ (* (first listy) 60)
+          (second listy)))
+      (#t
+       (+ (* (first listy) 3600)
+          (* (second listy) 60)
+          (last listy))))))
+
+(define format-converter
+  (lambda (frames)
+    (cond
+      ((equal? alt-out-format (settings-out-format boot-settings))
+       (exact->inexact(/ frames (settings-fps boot-settings))))
+      (#t
+       (inexact->exact frames)))))
+
+(define loadless-helper
+  (lambda (listy)
+    (cond
+      ((= (length listy) 2)
+       (frame-counter (first listy) (second listy) (settings-fps boot-settings)))
+      (#t
+       (+ (frame-counter (first listy) (second listy) (settings-fps boot-settings))
+          (loadless-helper (rest (rest listy))))))))
+
+(define frame-counter
+  (lambda (start stop fps)
+    (letrec ((sec-start (floor start))
+             (frac-start (- start sec-start))
+             (sec-stop (floor stop))
+             (frac-stop (- stop sec-stop)))
+      (+ (- (+ (* sec-stop fps) (frac-to-frame frac-stop fps))
+            (+ (* sec-start fps) (frac-to-frame frac-start fps)))
+         1))))
+
+(define frac-to-frame
+  (lambda (frac fps)
+    (round (* frac fps))))
