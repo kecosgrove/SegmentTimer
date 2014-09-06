@@ -3,6 +3,8 @@
 ;Settings:
 ;SET-FPS: takes a number and sets it as the working FPS (default is 60)
 ;SET-OUT-FORMAT: takes either the string "seconds" or the string "frames" (default is "frames")
+;CHECK-FPS: takes no inputs and returns the FPS the program is using to round and calculate frames
+;CHECK-OUT-FORMAT: takes no inputs and returns the unit the program is calculating time in.
 ;
 ;Functions:
 ;FROM-TO: takes any two times in seconds, returns the duration between them.
@@ -35,11 +37,29 @@
 ;Settings
 (define set-fps
   (lambda (fps)
-    (set-settings-fps! boot-settings fps)))
+    (cond
+      ((> fps 0)
+       (printf "FPS set to ~A.~%" fps)
+       (set-settings-fps! boot-settings fps))
+      (#t
+       (printf "Please provide an FPS greater than 0.~%")))))
 
 (define set-out-format
   (lambda (out-format)
-    (set-settings-out-format! boot-settings out-format)))
+    (cond
+      ((or (equal? out-format default-out-format) (equal? out-format alt-out-format))
+       (printf "The program will now output time in terms of ~A.~%" out-format)
+       (set-settings-out-format! boot-settings out-format))
+      (#t
+       (printf "That is not a valid output format. See comments.")))))
+
+(define check-fps
+  (lambda ()
+    (printf "The program is set to use ~A FPS.~%" (settings-fps boot-settings))))
+
+(define check-out-format
+  (lambda ()
+    (printf "The program will output time in terms of ~A.~%" (settings-out-format boot-settings))))
 
 ;Timing functions
 (define from-to
@@ -48,8 +68,12 @@
 
 (define loadless
   (lambda (listy)
-    (printf "With Loads: ~A~%Loadless: " (from-to (first listy) (last listy)))
-    (format-converter (loadless-helper listy))))
+    (cond
+      ((even? (length listy))
+       (printf "With Loads: ~A~%Loadless: " (from-to (first listy) (last listy)))
+       (format-converter (loadless-helper listy)))
+      (#t
+       (printf "The list must have an even number of elements. See comments.")))))
 
 (define longform-from-to
   (lambda (start stop)
