@@ -7,6 +7,9 @@
 ;Functions:
 ;FROM-TO: takes any two times in seconds, returns the duration between them.
 ;LOADLESS: takes a list of times in seconds of even length. Every other interval is added and returned. RTA time is printed.
+;LONGFORM-FROM-TO: takes 2 lists of length 1 2 or 3 where the last element is seconds, the second to last is minutes and
+;                  the third to last is hours. Calculates the difference between them.
+;LONGFORM-LOADLESS: takes a list of lists like those described above.
 ;
 ;Example Inputs to Interpreter:
 ;(from-to 12.53 87.3)
@@ -38,6 +41,32 @@
   (lambda (start stop)
     (format-converter (frame-counter start stop (settings-fps boot-settings)))))
 
+(define loadless
+  (lambda (listy)
+    (printf "With Loads: ~A~%Loadless: " (from-to (first listy) (last listy)))
+    (format-converter (loadless-helper listy))))
+
+(define longform-from-to
+  (lambda (start stop)
+    (from-to (longform-to-secs start) (longform-to-secs stop))))
+
+(define longform-loadless
+  (lambda (listy)
+    (loadless (map longform-to-secs listy))))
+
+(define longform-to-secs
+  (lambda (listy)
+    (cond
+      ((= (length listy) 1)
+       (first listy))
+      ((= (length listy) 2)
+       (+ (* (first listy) 60)
+          (second listy)))
+      (#t
+       (+ (* (first listy) 3600)
+          (* (second listy) 60)
+          (last listy))))))
+
 (define format-converter
   (lambda (frames)
     (cond
@@ -45,11 +74,6 @@
        (exact->inexact(/ frames (settings-fps boot-settings))))
       (#t
        (inexact->exact frames)))))
-
-(define loadless
-  (lambda (listy)
-    (printf "~A~%" (from-to (first listy) (last listy)))
-    (format-converter (loadless-helper listy))))
 
 (define loadless-helper
   (lambda (listy)
