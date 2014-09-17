@@ -66,16 +66,16 @@
 ;Timing functions
 (define from-to
   (lambda (start stop)
-    (format-converter (frame-counter start stop (settings-fps boot-settings)))))
+    (format "~A" (format-converter (frame-counter start stop (settings-fps boot-settings))))))
 
 (define loadless
   (lambda (listy)
     (cond
       ((even? (length listy))
-       (printf "With Loads: ~A~%Loadless: " (from-to (first listy) (last listy)))
-       (format-converter (loadless-helper listy)))
+       (format "With Loads: ~A~%Loadless: ~A" (from-to (first listy) (last listy))
+               (format-converter (loadless-helper listy))))
       (#t
-       (printf "The list must have an even number of elements. See comments.")))))
+       (format "The list must have an even number of elements. See comments.")))))
 
 (define longform-from-to
   (lambda (start stop)
