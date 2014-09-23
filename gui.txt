@@ -1,0 +1,215 @@
+(require scheme/gui)
+(load "SegmentTimer.txt")
+
+; Frame
+(define width 300)
+(define height 500)
+(define frame (new frame% [label "Video Timing Calculator"]
+                   [width width]
+                   [height height]))
+(send frame show #t)
+
+;Convert to Frames
+(define CtF (new vertical-panel%
+                 [parent frame]))
+
+(define CtF-Title (new message%
+                       [label "Input a time to convert in hours, minutes, seconds and/or frames."]
+                       [parent CtF]))
+
+(define CtF-Input (new horizontal-panel%
+                       [parent CtF]))
+
+(define CtF-Hours (new text-field%
+                       [parent CtF-Input]
+                       [label "H:"]
+                       [init-value "0"]
+                       (callback (lambda (t e) void))))
+
+(define CtF-Minutes (new text-field%
+                         [parent CtF-Input]
+                         [label "M:"]
+                         [init-value "0"]
+                         (callback (lambda (t e) void))))
+
+(define CtF-Seconds (new text-field%
+                         [parent CtF-Input]
+                         [label "S:"]
+                         [init-value "0.0"]
+                         (callback (lambda (t e) void))))
+
+(define CtF-Frames (new text-field%
+                        [parent CtF-Input]
+                        [label "F:"]
+                        [init-value "0"]
+                        (callback (lambda (t e) void))))
+
+(define CtF-Outbox (new message%
+                        [label "0"]
+                        [parent CtF]))
+
+;From-To
+(define FT (new vertical-panel%
+                [parent frame]))
+
+(define FT-Title (new message%
+                      [label "Calculates the duration between the starting and ending times, including the starting and ending frame."]
+                      [parent FT]))
+
+
+(define FT-Start (new horizontal-panel%
+                      [parent FT]))
+
+(define FT-Hours (new text-field%
+                      [parent FT-Start]
+                      [label "Start H:"]
+                      [init-value "0"]
+                      (callback (lambda (t e) void))))
+
+(define FT-Minutes (new text-field%
+                        [parent FT-Start]
+                        [label "Start M:"]
+                        [init-value "0"]
+                        (callback (lambda (t e) void))))
+
+(define FT-Seconds (new text-field%
+                        [parent FT-Start]
+                        [label "Start S:"]
+                        [init-value "0.0"]
+                        (callback (lambda (t e) void))))
+
+(define FT-Frames (new text-field%
+                       [parent FT-Start]
+                       [label "Start F:"]
+                       [init-value "0"]
+                       (callback (lambda (t e) void))))
+
+(define FT-End (new horizontal-panel%
+                    [parent FT]))
+
+(define End-Hours (new text-field%
+                       [parent FT-End]
+                       [label "End H:"]
+                       [init-value "0"]
+                       (callback (lambda (t e) void))))
+
+(define End-Minutes (new text-field%
+                         [parent FT-End]
+                         [label "End M:"]
+                         [init-value "0"]
+                         (callback (lambda (t e) void))))
+
+(define End-Seconds (new text-field%
+                         [parent FT-End]
+                         [label "End S:"]
+                         [init-value "0.0"]
+                         (callback (lambda (t e) void))))
+
+(define End-Frames (new text-field%
+                        [parent FT-End]
+                        [label "End F:"]
+                        [init-value "0"]
+                        (callback (lambda (t e) void))))
+
+(define FT-Out (new message%
+                    [label "0"]
+                    [parent FT]))
+
+;Loadless
+(define state (vector #t))
+(define L (new vertical-panel%
+               [parent frame]))
+
+(define L-Label (new message%
+                     [label "Create entries at every transition in and out of a loading screen. Returns the time with and without loads."]
+                     [parent L]))
+
+(define L-in (new horizontal-panel%
+                  [parent L]))
+
+(define L-Hours (new text-field%
+                     [parent L-in]
+                     [label "H:"]
+                     [init-value "0"]
+                     (callback (lambda (t e) void))))
+
+(define L-Minutes (new text-field%
+                       [parent L-in]
+                       [label "M:"]
+                       [init-value "0"]
+                       (callback (lambda (t e) void))))
+
+(define L-Seconds (new text-field%
+                       [parent L-in]
+                       [label "S:"]
+                       [init-value "0.0"]
+                       (callback (lambda (t e) void))))
+
+(define L-Frames (new text-field%
+                      [parent L-in]
+                      [label "F:"]
+                      [init-value "0"]
+                      (callback (lambda (t e) void))))
+
+(define L-Button (new button%
+                      [label "Create Entry"]
+                      [parent L]
+                      (callback (lambda (b e)
+                                  (cond ((vector-ref state 0)
+                                         (send L-Tracker set-label (format "Last Entry: Resume at: ~A:~A:~A + ~A Frames"
+                                                                           (send L-Hours get-value)
+                                                                           (send L-Minutes get-value)
+                                                                           (send L-Seconds get-value)
+                                                                           (send L-Frames get-value)))
+                                         (vector-set! state 0 #f)
+                                         (send L-Hours set-value "0")
+                                         (send L-Minutes set-value "0")
+                                         (send L-Seconds set-value "0.0")
+                                         (send L-Frames set-value "0")
+                                         (send L-Tracker show #t))
+                                        (#t
+                                         (send L-Tracker set-label (format "Last Entry: Pause at: ~A:~A:~A + ~A Frames"
+                                                                           (send L-Hours get-value)
+                                                                           (send L-Minutes get-value)
+                                                                           (send L-Seconds get-value)
+                                                                           (send L-Frames get-value)))
+                                         (vector-set! state 0 #t)
+                                         (send L-Hours set-value "0")
+                                         (send L-Minutes set-value "0")
+                                         (send L-Seconds set-value "0.0")
+                                         (send L-Frames set-value "0")
+                                         (send L-Tracker show #t)))))))
+
+(define L-Tracker (new message%
+                       [label "                                                                           "]
+                       [parent L]))
+
+(define total (new message%
+                       [label "0"]
+                       [parent L]))
+
+;Settings
+(define Settings (new vertical-panel%
+                      [parent frame]))
+
+(define Settings-Label (new message%
+                            [label "Settings"]
+                            [parent Settings]))
+
+
+(define set-fps (new text-field%
+                     [parent Settings]
+                     [label "FPS:"]
+                     [init-value "60"]
+                     (callback (lambda (t e) void))))
+(send set-fps show #t)
+
+
+(define rb-choices '("Frames" "Seconds" "Seconds.frames" "HH:MM:SS"))
+(define output-format (new radio-box%
+                           [parent Settings]
+                           [choices rb-choices]
+                           [label "Output Format:"]
+                           [style '(horizontal)]
+                           (callback (lambda (r e) void))))
+(send output-format show #t)
