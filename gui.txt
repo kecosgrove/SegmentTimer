@@ -49,7 +49,7 @@
                              [alignment '(right center)]))
 
 (define CtF-Outbox (new message%
-                        [label "0                                                                                    "]
+                        [label "Output: 0                                                                                    "]
                         [parent CtF-Outbox-cont]))
 
 (define str->number
@@ -61,7 +61,7 @@
 (define CtF-func
   (lambda ()
     (send CtF-Outbox set-label
-          (format "~A"
+          (format "Output: ~A"
                   (from-to 0
                            (+ (* (str->number (send CtF-Hours get-value))
                                  3600)
@@ -87,25 +87,25 @@
                       [parent FT-Start]
                       [label "Start H:"]
                       [init-value "0"]
-                      (callback (lambda (t e) (void)))))
+                      (callback (lambda (t e) (FT-func)))))
 
 (define FT-Minutes (new text-field%
                         [parent FT-Start]
                         [label "Start M:"]
                         [init-value "0"]
-                        (callback (lambda (t e) (void)))))
+                        (callback (lambda (t e) (FT-func)))))
 
 (define FT-Seconds (new text-field%
                         [parent FT-Start]
                         [label "Start S:"]
                         [init-value "0.0"]
-                        (callback (lambda (t e) (void)))))
+                        (callback (lambda (t e) (FT-func)))))
 
 (define FT-Frames (new text-field%
                        [parent FT-Start]
                        [label "Start F:"]
                        [init-value "0"]
-                       (callback (lambda (t e) (void)))))
+                       (callback (lambda (t e) (FT-func)))))
 
 (define FT-End (new horizontal-panel%
                     [parent FT]))
@@ -114,33 +114,52 @@
                        [parent FT-End]
                        [label "End H:"]
                        [init-value "0"]
-                       (callback (lambda (t e) (void)))))
+                       (callback (lambda (t e) (FT-func)))))
 
 (define End-Minutes (new text-field%
                          [parent FT-End]
                          [label "End M:"]
                          [init-value "0"]
-                         (callback (lambda (t e) (void)))))
+                         (callback (lambda (t e) (FT-func)))))
 
 (define End-Seconds (new text-field%
                          [parent FT-End]
                          [label "End S:"]
                          [init-value "0.0"]
-                         (callback (lambda (t e) (void)))))
+                         (callback (lambda (t e) (FT-func)))))
 
 (define End-Frames (new text-field%
                         [parent FT-End]
                         [label "End F:"]
                         [init-value "0"]
-                        (callback (lambda (t e) (void)))))
+                        (callback (lambda (t e) (FT-func)))))
 
 (define FT-Out-cont (new vertical-panel%
                          [parent FT]
                          [alignment '(right center)]))
 
 (define FT-Out (new message%
-                    [label "0                                                                                    "]
+                    [label "Output: 0                                                                                    "]
                     [parent FT-Out-cont]))
+
+(define FT-func
+  (lambda ()
+    (send FT-Out set-label
+          (format "Output: ~A"
+                  (from-to (+ (* (str->number (send FT-Hours get-value))
+                                 3600)
+                              (* (str->number (send FT-Minutes get-value))
+                                 60)
+                              (str->number (send FT-Seconds get-value))
+                              (* (str->number (send FT-Frames get-value))
+                                 (/ 1 60)))
+                           (+ (* (str->number (send End-Hours get-value))
+                                 3600)
+                              (* (str->number (send End-Minutes get-value))
+                                 60)
+                              (str->number (send End-Seconds get-value))
+                              (* (str->number (send End-Frames get-value))
+                                 (/ 1 60))))))))
 
 ;Loadless
 (define state (vector #t))
@@ -225,7 +244,7 @@
                         [alignment '(right center)]))
 
 (define total (new message%
-                   [label "0                                                                                    "]
+                   [label "Output: 0                                                                                    "]
                    [parent total-cont]))
 
                          ;Settings
