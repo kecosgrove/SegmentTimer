@@ -32,8 +32,7 @@
 
 ;Booting with default settings
 (define default-fps 60)
-(define default-out-format "frames")
-(define alt-out-format "seconds")
+(define default-out-format "HH:MM:SS")
 (define boot-settings (make-settings default-fps default-out-format))
 
 ;Settings
@@ -41,23 +40,17 @@
   (lambda (fps)
     (cond
       ((> fps 0)
-       (printf "FPS set to ~A." fps)
        (set-settings-fps! boot-settings fps))
       (#t
-       (printf "Please provide an FPS greater than 0.")))))
+       (void)))))
 
 (define set-out-format
   (lambda (out-format)
-    (cond
-      ((or (equal? out-format default-out-format) (equal? out-format alt-out-format))
-       (printf "The program will now output time in terms of ~A." out-format)
-       (set-settings-out-format! boot-settings out-format))
-      (#t
-       (printf "That is not a valid output format. See comments.")))))
+    (set-settings-out-format! boot-settings out-format)))
 
 (define check-fps
   (lambda ()
-    (printf "The program is set to use ~A FPS." (settings-fps boot-settings))))
+    (settings-fps boot-settings)))
 
 (define check-out-format
   (lambda ()
@@ -101,8 +94,19 @@
 (define format-converter
   (lambda (frames)
     (cond
-      ((equal? alt-out-format (settings-out-format boot-settings))
+      ((equal? "seconds" (settings-out-format boot-settings))
        (exact->inexact(/ frames (settings-fps boot-settings))))
+      ((equal? "seconds.frames" (settings-out-format boot-settings))
+       (format "~A.~A"
+               (floor (inexact->exact (/ frames (settings-fps boot-settings))))
+               (inexact->exact(modulo frames (settings-fps boot-settings)))))
+      ((equal? "HH:MM:SS" (settings-out-format boot-settings))
+       (format "~A:~A:~A"
+               (inexact->exact (floor (exact->inexact(/ frames (* (settings-fps boot-settings) 216000)))))
+               (inexact->exact (modulo (floor (exact->inexact (/ frames (* (settings-fps boot-settings) 3600)))) 60))
+               (+ (modulo (floor (exact->inexact(/ frames (settings-fps boot-settings)))) 60)
+                 (- (exact->inexact(/ frames (settings-fps boot-settings)))
+                    (floor (exact->inexact(/ frames (settings-fps boot-settings))))))))
       (#t
        (inexact->exact frames)))))
 

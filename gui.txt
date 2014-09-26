@@ -247,28 +247,28 @@
                    [label "Output: 0                                                                                    "]
                    [parent total-cont]))
 
-                         ;Settings
-                         (define Settings (new vertical-panel%
-                                               [parent frame]))
-                         
-                         (define Settings-Label (new message%
-                                                     [label "Settings"]
-                                                     [parent Settings]))
-                         
-                         
-                         (define set-fps (new text-field%
-                                              [parent Settings]
-                                              [label "FPS:"]
-                                              [init-value "60"]
-                                              (callback (lambda (t e) (void)))))
-                         (send set-fps show #t)
-                         
-                         
-                         (define rb-choices '("Frames" "Seconds" "Seconds.frames" "HH:MM:SS"))
-                         (define output-format (new radio-box%
-                                                    [parent Settings]
-                                                    [choices rb-choices]
-                                                    [label "Output Format:"]
-                                                    [style '(horizontal)]
-                                                    (callback (lambda (r e) (void)))))
-                         (send output-format show #t)
+;Settings
+(define Settings (new vertical-panel%
+                      [parent frame]))
+
+(define Settings-Label (new message%
+                            [label "Settings"]
+                            [parent Settings]))
+
+
+(define set-fps (new text-field%
+                     [parent Settings]
+                     [label "FPS:"]
+                     [init-value "60"]
+                     (callback (lambda (t e) (void)))))
+(send set-fps show #t)
+
+
+(define rb-choices '("Frames" "Seconds" "Seconds.frames" "HH:MM:SS"))
+(define output-format (new radio-box%
+                           [parent Settings]
+                           [choices rb-choices]
+                           [label "Output Format:"]
+                           [style '(horizontal)]
+                           (callback (lambda (r e) (void)))))
+(send output-format show #t)
