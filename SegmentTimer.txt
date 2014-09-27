@@ -28,11 +28,30 @@
 ;Loadless: 13649
 ;---------------------------------------------------------------------------------------------------------------------------
 
-(define-struct settings (fps out-format))
+;struct stuff because gui broke it
+(define make-settings
+  (lambda (fps out-format)
+    (vector fps out-format)))
+
+(define settings-fps
+  (lambda (vecky)
+    (vector-ref vecky 0)))
+
+(define set-settings-fps!
+  (lambda (vecky item)
+    (vector-set! vecky 0 item)))
+
+(define settings-out-format
+  (lambda (vecky)
+    (vector-ref vecky 1)))
+
+(define set-settings-out-format!
+  (lambda (vecky item)
+    (vector-set! vecky 1 item)))
 
 ;Booting with default settings
 (define default-fps 60)
-(define default-out-format "HH:MM:SS")
+(define default-out-format 1)
 (define boot-settings (make-settings default-fps default-out-format))
 
 ;Settings
@@ -48,18 +67,10 @@
   (lambda (out-format)
     (set-settings-out-format! boot-settings out-format)))
 
-(define check-fps
-  (lambda ()
-    (settings-fps boot-settings)))
-
-(define check-out-format
-  (lambda ()
-    (printf "The program will output time in terms of ~A." (settings-out-format boot-settings))))
-
 ;Timing functions
 (define from-to
   (lambda (start stop)
-    (format "~A" (format-converter (frame-counter start stop (settings-fps boot-settings))))))
+    (format-converter (frame-counter start stop (settings-fps boot-settings)))))
 
 (define loadless
   (lambda (listy)
@@ -68,7 +79,7 @@
        (format "With Loads: ~A Loadless: ~A" (from-to (first listy) (last listy))
                (format-converter (loadless-helper listy))))
       (#t
-       (format "The list must have an even number of elements. See comments.")))))
+       (format "-")))))
 
 (define longform-from-to
   (lambda (start stop)
@@ -94,13 +105,13 @@
 (define format-converter
   (lambda (frames)
     (cond
-      ((equal? "seconds" (settings-out-format boot-settings))
-       (exact->inexact(/ frames (settings-fps boot-settings))))
-      ((equal? "seconds.frames" (settings-out-format boot-settings))
+      ((= 1 (settings-out-format boot-settings))
+       (format "~A" (exact->inexact(/ frames (settings-fps boot-settings)))))
+      ((= 2 (settings-out-format boot-settings))
        (format "~A.~A"
                (floor (inexact->exact (/ frames (settings-fps boot-settings))))
                (inexact->exact(modulo frames (settings-fps boot-settings)))))
-      ((equal? "HH:MM:SS" (settings-out-format boot-settings))
+      ((= 3 (settings-out-format boot-settings))
        (format "~A:~A:~A"
                (inexact->exact (floor (exact->inexact(/ frames (* (settings-fps boot-settings) 216000)))))
                (inexact->exact (modulo (floor (exact->inexact (/ frames (* (settings-fps boot-settings) 3600)))) 60))
@@ -108,7 +119,7 @@
                  (- (exact->inexact(/ frames (settings-fps boot-settings)))
                     (floor (exact->inexact(/ frames (settings-fps boot-settings))))))))
       (#t
-       (inexact->exact frames)))))
+       (format "~A" (inexact->exact frames))))))
 
 (define loadless-helper
   (lambda (listy)

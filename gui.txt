@@ -48,9 +48,10 @@
                              [parent CtF]
                              [alignment '(right center)]))
 
-(define CtF-Outbox (new message%
-                        [label "Output: 0                                                                                    "]
-                        [parent CtF-Outbox-cont]))
+(define CtF-Outbox
+  (new message%
+       [label "Output: 0                                                                            "]
+       [parent CtF-Outbox-cont]))
 
 (define str->number
   (lambda (str)
@@ -69,7 +70,7 @@
                                  60)
                               (str->number (send CtF-Seconds get-value))
                               (* (- (str->number (send CtF-Frames get-value)) 1)
-                                 (/ 1 60))))))))
+                                 (/ 1 (settings-fps boot-settings)))))))))
 
 ;From-To
 (define FT (new vertical-panel%
@@ -139,7 +140,7 @@
                          [alignment '(right center)]))
 
 (define FT-Out (new message%
-                    [label "Output: 0                                                                                    "]
+                    [label "Output: 0                                                                            "]
                     [parent FT-Out-cont]))
 
 (define FT-func
@@ -244,7 +245,7 @@
                         [alignment '(right center)]))
 
 (define total (new message%
-                   [label "Output: 0                                                                                    "]
+                   [label "Output: 0                                                                            "]
                    [parent total-cont]))
 
 ;Settings
@@ -256,12 +257,15 @@
                             [parent Settings]))
 
 
-(define set-fps (new text-field%
-                     [parent Settings]
-                     [label "FPS:"]
-                     [init-value "60"]
-                     (callback (lambda (t e) (void)))))
-(send set-fps show #t)
+(define set-fps-tb (new text-field%
+                        [parent Settings]
+                        [label "FPS:"]
+                        [init-value (format "~A" default-fps)]
+                        (callback (lambda (t e) (if
+                                                 (number? (str->number (send L-Hours get-value)))
+                                                 (set-fps (str->number (send set-fps-tb get-value)))
+                                                 (void))))))
+(send set-fps-tb show #t)
 
 
 (define rb-choices '("Frames" "Seconds" "Seconds.frames" "HH:MM:SS"))
@@ -270,5 +274,13 @@
                            [choices rb-choices]
                            [label "Output Format:"]
                            [style '(horizontal)]
-                           (callback (lambda (r e) (void)))))
+                           [selection (settings-out-format boot-settings)]
+                           (callback (lambda (r e)
+                                       (set-settings-out-format! boot-settings (send output-format get-selection))))))
 (send output-format show #t)
+(define refresh (new button%
+                     [label "Refresh"]
+                     [parent Settings]
+                     (callback (lambda (b e)
+                                 (FT-func)
+                                 (CtF-func)))))
