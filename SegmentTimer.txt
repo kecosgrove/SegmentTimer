@@ -75,8 +75,8 @@
 (define loadless
   (lambda (listy)
     (cond
-      ((even? (length listy))
-       (format "With Loads: ~A Loadless: ~A" (from-to (first listy) (last listy))
+      ((and (even? (length listy)) (not (null? listy)))
+       (format "With Loads: ~A Loadless: ~A" (from-to (last listy) (first listy))
                (format-converter (loadless-helper listy))))
       (#t
        (format "-")))))
@@ -125,9 +125,9 @@
   (lambda (listy)
     (cond
       ((= (length listy) 2)
-       (frame-counter (first listy) (second listy) (settings-fps boot-settings)))
+       (frame-counter (second listy) (first listy) (settings-fps boot-settings)))
       (#t
-       (+ (frame-counter (first listy) (second listy) (settings-fps boot-settings))
+       (+ (frame-counter (second listy) (first listy) (settings-fps boot-settings))
           (loadless-helper (rest (rest listy))))))))
 
 (define frame-counter

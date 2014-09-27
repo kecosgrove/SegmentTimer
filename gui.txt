@@ -46,7 +46,7 @@
 
 (define CtF-Outbox-cont (new vertical-panel%
                              [parent CtF]
-                             [alignment '(right center)]))
+                             [alignment '(left center)]))
 
 (define CtF-Outbox
   (new message%
@@ -137,7 +137,7 @@
 
 (define FT-Out-cont (new vertical-panel%
                          [parent FT]
-                         [alignment '(right center)]))
+                         [alignment '(left center)]))
 
 (define FT-Out (new message%
                     [label "Output: 0                                                                            "]
@@ -164,6 +164,7 @@
 
 ;Loadless
 (define state (vector #t))
+(define inputs (vector (list)))
 (define L (new vertical-panel%
                [parent frame]))
 
@@ -206,6 +207,17 @@
                       [label "Create Entry"]
                       [parent Button-panel]
                       (callback (lambda (b e)
+                                  (vector-set! inputs
+                                               0
+                                               (cons (+ (* (str->number (send L-Hours get-value))
+                                                           3600)
+                                                        (* (str->number (send L-Minutes get-value))
+                                                           60)
+                                                        (str->number (send L-Seconds get-value))
+                                                        (* (str->number (send L-Frames get-value))
+                                                           (/ 1 60)))
+                                                     (vector-ref inputs 0)))
+                                  (L-refresh)
                                   (cond ((vector-ref state 0)
                                          (send L-Tracker set-label (format "Last Entry: Resume at: ~A:~A:~A + ~A Frames"
                                                                            (send L-Hours get-value)
@@ -234,20 +246,57 @@
 (define L-Button-rm (new button%
                          [label "Erase Last Entry"]
                          [parent Button-panel]
-                         (callback (lambda (b e) (void)))))
-                         
+                         (callback (lambda (b e)
+                                     (vector-set! inputs
+                                                  0
+                                                  (rest (vector-ref inputs 0)))
+                                     (L-refresh)
+                                     (cond
+                                       ((vector-ref state 0)
+                                        (send L-Tracker set-label (format "Last Entry: Resume at: ~A"
+                                                                          (gen-format-converter (first (vector-ref inputs 0)) 3)))
+                                        (vector-set! state 0 #f)
+                                        (send L-Tracker show #t))
+                                       (#t
+                                        (send L-Tracker set-label (format "Last Entry: Pause at: ~A"
+                                                                          (gen-format-converter (first (vector-ref inputs 0)) 3)))
+                                        (vector-set! state 0 #t)
+                                        (send L-Tracker show #t)))))))
+
 (define L-Tracker (new message%
-                       [label "                                                                           "]
+                       [label "                                                                              "]
                        [parent L]))
 
 (define total-cont (new vertical-panel%
                         [parent L]
-                        [alignment '(right center)]))
+                        [alignment '(left center)]))
 
 (define total (new message%
-                   [label "Output: 0                                                                            "]
+                   [label "Output: 0                                                                                                                                         "]
                    [parent total-cont]))
 
+(define L-refresh
+  (lambda ()
+    (send total set-label (format "Output: ~A" (loadless (vector-ref inputs 0))))))
+
+(define gen-format-converter
+  (lambda (frames formatid)
+    (cond
+      ((= 1 formatid)
+       (format "~A" (exact->inexact(/ frames (settings-fps boot-settings)))))
+      ((= 2 formatid)
+       (format "~A.~A"
+               (floor (inexact->exact (/ frames (settings-fps boot-settings))))
+               (inexact->exact(modulo frames (settings-fps boot-settings)))))
+      ((= 3 formatid)
+       (format "~A:~A:~A"
+               (inexact->exact (floor (exact->inexact(/ frames (* (settings-fps boot-settings) 216000)))))
+               (inexact->exact (modulo (floor (exact->inexact (/ frames (* (settings-fps boot-settings) 3600)))) 60))
+               (+ (modulo (floor (exact->inexact(/ frames (settings-fps boot-settings)))) 60)
+                  (- (exact->inexact(/ frames (settings-fps boot-settings)))
+                     (floor (exact->inexact(/ frames (settings-fps boot-settings))))))))
+      (#t
+       (format "~A" (inexact->exact frames))))))
 ;Settings
 (define Settings (new vertical-panel%
                       [parent frame]))
@@ -283,4 +332,5 @@
                      [parent Settings]
                      (callback (lambda (b e)
                                  (FT-func)
-                                 (CtF-func)))))
+                                 (CtF-func)
+                                 (L-refresh)))))
