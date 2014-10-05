@@ -1,31 +1,6 @@
 ;A tool for timing video content. Times the two input frames and all frames in between.
 ;Calculates exact frames from approximate timestamps. Rounds times to exact frame values.
 ;Includes various other functionalities to time durations and remove loading or other unwanted time.
-;
-;Settings:
-;SET-FPS: takes a number and sets it as the working FPS (default is 60)
-;SET-OUT-FORMAT: takes either the string "seconds" or the string "frames" (default is "frames")
-;CHECK-FPS: takes no inputs and returns the FPS the program is using to round and calculate frames
-;CHECK-OUT-FORMAT: takes no inputs and returns the unit the program is calculating time in.
-;
-;Functions:
-;FROM-TO: takes any two times in seconds, returns the duration between them.
-;LOADLESS: takes a list of times in seconds of even length. Every other interval is added and returned. RTA time is printed.
-;LONGFORM-FROM-TO: takes 2 lists of length 1 2 or 3 where the last element is seconds, the second to last is minutes and
-;                  the third to last is hours. Calculates the difference between them.
-;LONGFORM-LOADLESS: takes a list of lists like those described above.
-;
-;Example Inputs to Interpreter:
-;(from-to 12.53 87.3)
-;4487
-;(loadless '(2.33 47.8 49.85 121.3 122.15 154.016))
-;With Loads: 9102
-;Loadless: 8930
-;(longform-from-to '(1 34 25.55) '(1 35 1.33))
-;2148
-;(longform-loadless '((3 56.117) (5 12.533) (5 13.966) (7 45)))
-;With Loads: 13734
-;Loadless: 13649
 ;---------------------------------------------------------------------------------------------------------------------------
 
 ;struct stuff because gui broke it
@@ -51,7 +26,7 @@
 
 ;Booting with default settings
 (define default-fps 60)
-(define default-out-format 1)
+(define default-out-format 0)
 (define boot-settings (make-settings default-fps default-out-format))
 
 ;Settings
