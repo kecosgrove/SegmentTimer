@@ -1,7 +1,8 @@
 (require scheme/gui)
 (load "SegmentTimer.txt")
 
-; Frame
+; ==Frame==
+
 (define width 300)
 (define height 500)
 (define frame (new frame% [label "Video Timing Calculator"]
@@ -9,7 +10,53 @@
                    [height height]))
 (send frame show #t)
 
-;Convert to Frames
+; ==Helper Functions==
+
+
+;;; STR->NUMBER
+;;;----------------------
+;;; INPUT: STR, a string containing a number
+;;; OUTPUT: the number contained by STR
+
+(define str->number
+  (lambda (str)
+    (if (equal? str "")
+        0
+        (read (open-input-string str)))))
+
+;;; GEN-FORMAT-CONVERTER
+;;;----------------------
+;;; INPUT: FRAMES, an integer representing a number of frames
+;;;        FORMATID, an integer representing an output format.
+;;; OUTPUT: A string representing the time represented by FRAMES in the output format represented by FORMATID
+;;; 0: Frames
+;;; 1: Seconds
+;;; 2: Seconds.Frames
+;;; 3: HH:MM:SS
+
+(define gen-format-converter
+  (lambda (frames formatid)
+    (cond
+      ((= 1 formatid)
+       (format "~A" (exact->inexact(/ frames (settings-fps boot-settings)))))
+      ((= 2 formatid)
+       (format "~A.~A"
+               (floor (inexact->exact (/ frames (settings-fps boot-settings))))
+               (inexact->exact(modulo frames (settings-fps boot-settings)))))
+      ((= 3 formatid)
+       (format "~A:~A:~A"
+               (inexact->exact (floor (exact->inexact(/ frames (* (settings-fps boot-settings) 216000)))))
+               (inexact->exact (modulo (floor (exact->inexact (/ frames (* (settings-fps boot-settings) 3600)))) 60))
+               (+ (modulo (floor (exact->inexact(/ frames (settings-fps boot-settings)))) 60)
+                  (- (exact->inexact(/ frames (settings-fps boot-settings)))
+                     (floor (exact->inexact(/ frames (settings-fps boot-settings))))))))
+      (#t
+       (format "~A" (inexact->exact frames))))))
+
+; ==Convert to Frames==
+
+; GUI
+
 (define CtF (new vertical-panel%
                  [parent frame]))
 
@@ -53,11 +100,13 @@
        [label "Output: 0                                                                            "]
        [parent CtF-Outbox-cont]))
 
-(define str->number
-  (lambda (str)
-    (if (equal? str "")
-        0
-        (read (open-input-string str)))))
+; Function
+
+;;; CTF-FUNC
+;;;----------------------
+;;; INPUT: None
+;;; OUTPUT: Void
+;;; EFFECT: Sets the label of the CTF-OUTBOX to provide the correct output for the inputs in CTF-INPUT
 
 (define CtF-func
   (lambda ()
@@ -72,7 +121,10 @@
                               (* (- (str->number (send CtF-Frames get-value)) 1)
                                  (/ 1 (settings-fps boot-settings)))))))))
 
-;From-To
+; ==From-To==
+
+; GUI
+
 (define FT (new vertical-panel%
                 [parent frame]))
 
@@ -135,17 +187,25 @@
                         [init-value "0"]
                         (callback (lambda (t e) (FT-func)))))
 
-(define FT-Out-cont (new vertical-panel%
-                         [parent FT]
-                         [alignment '(left center)]))
+(define FT-Outbox-cont (new vertical-panel%
+                            [parent FT]
+                            [alignment '(left center)]))
 
-(define FT-Out (new message%
-                    [label "Output: 0                                                                            "]
-                    [parent FT-Out-cont]))
+(define FT-Outbox (new message%
+                       [label "Output: 0                                                                            "]
+                       [parent FT-Outbox-cont]))
+
+; Function
+
+;;; FT-FUNC
+;;;----------------------
+;;; INPUT: None
+;;; OUTPUT: Void
+;;; EFFECT: Sets the label of FT-OUTBOX to provide the correct output for the inputs
 
 (define FT-func
   (lambda ()
-    (send FT-Out set-label
+    (send FT-Outbox set-label
           (format "Output: ~A"
                   (from-to (+ (* (str->number (send FT-Hours get-value))
                                  3600)
@@ -163,8 +223,14 @@
                                  (/ 1 60))))))))
 
 ;Loadless
+
+; Variables
+
 (define state (vector #t))
 (define inputs (vector (list)))
+
+; GUI
+
 (define L (new vertical-panel%
                [parent frame]))
 
@@ -172,29 +238,29 @@
                      [label "Create entries at every transition in and out of a loading screen. Returns the time with and without loads."]
                      [parent L]))
 
-(define L-in (new horizontal-panel%
+(define L-In (new horizontal-panel%
                   [parent L]))
 
 (define L-Hours (new text-field%
-                     [parent L-in]
+                     [parent L-In]
                      [label "H:"]
                      [init-value "0"]
                      (callback (lambda (t e) (void)))))
 
 (define L-Minutes (new text-field%
-                       [parent L-in]
+                       [parent L-In]
                        [label "M:"]
                        [init-value "0"]
                        (callback (lambda (t e) (void)))))
 
 (define L-Seconds (new text-field%
-                       [parent L-in]
+                       [parent L-In]
                        [label "S:"]
                        [init-value "0.0"]
                        (callback (lambda (t e) (void)))))
 
 (define L-Frames (new text-field%
-                      [parent L-in]
+                      [parent L-In]
                       [label "F:"]
                       [init-value "0"]
                       (callback (lambda (t e) (void)))))
@@ -275,29 +341,22 @@
                    [label "Output: 0                                                                                                                                         "]
                    [parent total-cont]))
 
+; Functions
+
+;;; L-REFRESH
+;;;----------------------
+;;; INPUT: None
+;;; OUTPUT: Void
+;;; EFFECT: Sets the label of TOTAL to provide the correct output for the given inputs in LOADLESS 
+
 (define L-refresh
   (lambda ()
     (send total set-label (format "Output: ~A" (loadless (vector-ref inputs 0))))))
 
-(define gen-format-converter
-  (lambda (frames formatid)
-    (cond
-      ((= 1 formatid)
-       (format "~A" (exact->inexact(/ frames (settings-fps boot-settings)))))
-      ((= 2 formatid)
-       (format "~A.~A"
-               (floor (inexact->exact (/ frames (settings-fps boot-settings))))
-               (inexact->exact(modulo frames (settings-fps boot-settings)))))
-      ((= 3 formatid)
-       (format "~A:~A:~A"
-               (inexact->exact (floor (exact->inexact(/ frames (* (settings-fps boot-settings) 216000)))))
-               (inexact->exact (modulo (floor (exact->inexact (/ frames (* (settings-fps boot-settings) 3600)))) 60))
-               (+ (modulo (floor (exact->inexact(/ frames (settings-fps boot-settings)))) 60)
-                  (- (exact->inexact(/ frames (settings-fps boot-settings)))
-                     (floor (exact->inexact(/ frames (settings-fps boot-settings))))))))
-      (#t
-       (format "~A" (inexact->exact frames))))))
-;Settings
+;  ==Settings==
+
+; GUI
+
 (define Settings (new vertical-panel%
                       [parent frame]))
 

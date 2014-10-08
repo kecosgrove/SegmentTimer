@@ -3,7 +3,7 @@
 ;Includes various other functionalities to time durations and remove loading or other unwanted time.
 ;---------------------------------------------------------------------------------------------------------------------------
 
-;struct stuff because gui broke it
+; Def-Struct stuff because gui broke it
 (define make-settings
   (lambda (fps out-format)
     (vector fps out-format)))
@@ -30,6 +30,13 @@
 (define boot-settings (make-settings default-fps default-out-format))
 
 ;Settings
+
+;;; SET-FPS
+;;;----------------------
+;;; INPUT: FPS, an integer representing the FPS
+;;; OUTPUT: Void
+;;; EFFECT: Sets the FPS stored in boot-settings to be equal to FPS
+
 (define set-fps
   (lambda (fps)
     (cond
@@ -38,14 +45,36 @@
       (#t
        (void)))))
 
+;;; SET-OUT-FORMAT
+;;;----------------------
+;;; INPUT: OUT-FORMAT, an integer representing the output format.
+;;; OUTPUT: Void
+;;; EFFECT: Sets the OUT-FORMAT stored in boot-settings to be equal to OUT-FORMAT
+;;; 0: Frames
+;;; 1: Seconds
+;;; 2: Seconds.Frames
+;;; 3: HH:MM:SS
+
 (define set-out-format
   (lambda (out-format)
     (set-settings-out-format! boot-settings out-format)))
 
 ;Timing functions
+
+;;; FROM-TO
+;;;----------------------
+;;; INPUT: START, the starting frame.
+;;;        STOP, the ending frame.
+;;; OUTPUT: A string with the time between START and STOP inclusive formatted according to settings-out-format.
+
 (define from-to
   (lambda (start stop)
     (format-converter (frame-counter start stop (settings-fps boot-settings)))))
+
+;;; LOADLESS
+;;;----------------------
+;;; INPUT: LISTY, a list of frame indexes
+;;; OUTPUT: A string with the time with and without loads formatted according to settings-out-format.
 
 (define loadless
   (lambda (listy)
@@ -56,26 +85,10 @@
       (#t
        (format "-")))))
 
-(define longform-from-to
-  (lambda (start stop)
-    (from-to (longform-to-secs start) (longform-to-secs stop))))
-
-(define longform-loadless
-  (lambda (listy)
-    (loadless (map longform-to-secs listy))))
-
-(define longform-to-secs
-  (lambda (listy)
-    (cond
-      ((= (length listy) 1)
-       (first listy))
-      ((= (length listy) 2)
-       (+ (* (first listy) 60)
-          (second listy)))
-      (#t
-       (+ (* (first listy) 3600)
-          (* (second listy) 60)
-          (last listy))))))
+;;; FORMAT-CONVERTER
+;;;----------------------
+;;; INPUT: FRAMES, an integer representing a number of frames.
+;;; OUTPUT: A string representing the number of FRAMES formatted according to settings-out-format
 
 (define format-converter
   (lambda (frames)
@@ -96,6 +109,11 @@
       (#t
        (format "~A" (inexact->exact frames))))))
 
+;;; LOADLESS-HELPER
+;;;----------------------
+;;; INPUT: LISTY, a list of frame indexes
+;;; OUTPUT: An integer representing the number of loadless frames
+
 (define loadless-helper
   (lambda (listy)
     (cond
@@ -104,6 +122,13 @@
       (#t
        (+ (frame-counter (second listy) (first listy) (settings-fps boot-settings))
           (loadless-helper (rest (rest listy))))))))
+
+;;; FRAME-COUNTER
+;;;----------------------
+;;; INPUT: START, a float representing a timestamp in seconds.
+;;;        STOP, a float representing a timestamp in seconds.
+;;;        FPS, an integer representing the frames per second
+;;; OUTPUT: An integer representing the number of frames between START and STOP inclusive.
 
 (define frame-counter
   (lambda (start stop fps)
@@ -114,6 +139,12 @@
       (+ (- (+ (* sec-stop fps) (frac-to-frame frac-stop fps))
             (+ (* sec-start fps) (frac-to-frame frac-start fps)))
          1))))
+
+;;; FRAC-TO-FRAME
+;;;----------------------
+;;; INPUT: FRAC, a number between 0 and 1
+;;;        FPS, an integer representing frames per second
+;;; OUTPUT: an integer representing the number of frames which pass in FRAC seconds.
 
 (define frac-to-frame
   (lambda (frac fps)
